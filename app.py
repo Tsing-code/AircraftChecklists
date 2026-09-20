@@ -522,10 +522,6 @@ class ChecklistApp(tk.Tk):
         messagebox.showinfo("Export", f"Exported {len(checklists)} checklist(s) to:\n{path}", parent=self)
 
     def _import_checklists(self):
-        ac_name = self.current_aircraft.get()
-        if not ac_name:
-            messagebox.showinfo("Import", "Add (or select) an aircraft first.", parent=self)
-            return
         path = filedialog.askopenfilename(parent=self, title="Import Checklists",
                                            filetypes=[("Checklist JSON", "*.json"), ("All files", "*.*")])
         if not path:
@@ -540,13 +536,26 @@ class ChecklistApp(tk.Tk):
         if not isinstance(checklists, list) or not checklists:
             messagebox.showerror("Import", "That file doesn't contain any checklists.", parent=self)
             return
-        try:
-            added = self.store.import_checklists(ac_name, checklists)
-        except ValueError as e:
-            messagebox.showerror("Import", str(e), parent=self)
+
+        # A whole-aircraft export names its aircraft in the file - default to
+        # that (falling back to whatever aircraft is currently selected) so
+        # importing a checklist suite doesn't require creating the aircraft
+        # by hand first. The aircraft is created automatically if it's new.
+        suggested = (payload.get("aircraft") if isinstance(payload, dict) else None) \
+            or self.current_aircraft.get()
+        target = simpledialog.askstring("Import Checklists", "Import into aircraft:",
+                                         initialvalue=suggested, parent=self)
+        if not target or not target.strip():
             return
-        self._reload_checklist_listbox()
-        messagebox.showinfo("Import", f"Imported {len(added)} checklist(s):\n" + "\n".join(added), parent=self)
+        target = target.strip()
+
+        self.store.get_or_create_aircraft(target)
+        added = self.store.import_checklists(target, checklists)
+
+        self.current_aircraft.set(target)
+        self._refresh_aircraft_combo()
+        messagebox.showinfo("Import", f"Imported {len(added)} checklist(s) into '{target}':\n"
+                                       + "\n".join(added), parent=self)
 
     # ------------------------------------------------------------------
     # Items - rendering (run view)

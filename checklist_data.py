@@ -112,6 +112,14 @@ class DataStore:
         self.data["aircraft"].append({"name": name, "checklists": []})
         self.save()
 
+    def get_or_create_aircraft(self, name):
+        ac = self.get_aircraft(name)
+        if ac is None:
+            self.data["aircraft"].append({"name": name, "checklists": []})
+            self.save()
+            ac = self.get_aircraft(name)
+        return ac
+
     def rename_aircraft(self, old_name, new_name):
         if old_name != new_name and self.get_aircraft(new_name):
             raise ValueError("An aircraft with that name already exists.")
