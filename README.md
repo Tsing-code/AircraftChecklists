@@ -32,6 +32,21 @@ python app.py
 
 On Windows, double-click `Run Checklist.bat` to launch without a terminal window.
 
+## Building a standalone .exe
+
+Requires [PyInstaller](https://pyinstaller.org/):
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed --name "Electronic Checklist" app.py
+```
+
+The exe is written to `dist/Electronic Checklist.exe`. It's fully standalone — no
+Python install needed on the target machine — and stores `data.json` next to
+wherever the exe itself lives, so it can be copied anywhere. Build output
+(`build/`, `dist/`, the generated `.spec` file) isn't tracked in git; rebuild from
+source whenever you need a fresh exe.
+
 ## Data storage
 
 Checklist data is stored in `data.json` next to the app (not tracked in git — a

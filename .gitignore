@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 data.json
 data.json.tmp
+
+# PyInstaller build output
+build/
+dist/
+*.spec

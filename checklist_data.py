@@ -2,8 +2,16 @@
 import copy
 import json
 import os
+import sys
 
-DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
+if getattr(sys, "frozen", False):
+    # Running as a PyInstaller exe: __file__ would point into the temporary
+    # extraction folder (wiped on exit), so store data next to the exe instead.
+    _BASE_DIR = os.path.dirname(sys.executable)
+else:
+    _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATA_FILE = os.path.join(_BASE_DIR, "data.json")
 
 
 def _default_data():
