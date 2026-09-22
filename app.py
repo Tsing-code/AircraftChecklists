@@ -200,6 +200,7 @@ class ChecklistApp(tk.Tk):
         self._btn(top, "+ Add Checklist", self._add_checklist).pack(side="left")
         self.menu_edit_toggle_btn = self._btn(top, "Edit Checklists", self._show_menu_edit)
         self.menu_edit_toggle_btn.pack(side="right")
+        self._btn(top, "Reset All", self._reset_all_checklists).pack(side="right", padx=(0, 6))
 
         canvas = tk.Canvas(self.menu_frame, bg=BG, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.menu_frame, orient="vertical", command=canvas.yview)
@@ -255,6 +256,7 @@ class ChecklistApp(tk.Tk):
         self._btn(top, "Edit Items", self._show_item_edit).pack(side="right")
 
         canvas = tk.Canvas(self.run_frame, bg=BG, highlightthickness=0)
+        self.items_canvas = canvas
         scrollbar = ttk.Scrollbar(self.run_frame, orient="vertical", command=canvas.yview)
         self.items_frame = tk.Frame(canvas, bg=BG)
         self.items_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
@@ -420,6 +422,22 @@ class ChecklistApp(tk.Tk):
         if self.store.get_checklist(ac_name, name).get("completed", False):
             self.store.set_checklist_completed(ac_name, name, False)
         self._show_run()
+
+    def _reset_all_checklists(self):
+        ac_name = self.current_aircraft.get()
+        if not ac_name:
+            messagebox.showinfo("Reset All", "Select an aircraft first.", parent=self)
+            return
+        if not self._current_checklists():
+            messagebox.showinfo("Reset All", "No checklists to reset.", parent=self)
+            return
+        if not messagebox.askyesno("Reset All",
+                                    f"Reset all checklists for '{ac_name}'? This clears their "
+                                    "completed status (shown in this menu) - it doesn't delete "
+                                    "anything.", parent=self):
+            return
+        self.store.reset_all_checklists(ac_name)
+        self._refresh_menu()
 
     def _add_checklist(self):
         ac_name = self.current_aircraft.get()
@@ -593,7 +611,7 @@ class ChecklistApp(tk.Tk):
             lbl.pack(side="left", fill="x", expand=True)
             lbl.bind("<Button-1>", lambda e, p=pos: (self.item_rows[p]["var"].set(
                 not self.item_rows[p]["var"].get()), self._on_item_toggled(p)))
-            self.item_rows.append({"var": var, "label": lbl})
+            self.item_rows.append({"var": var, "label": lbl, "row": row})
 
         self._update_progress()
 
@@ -602,9 +620,34 @@ class ChecklistApp(tk.Tk):
         var, lbl = entry["var"], entry["label"]
         if var.get():
             lbl.configure(fg=DONE, font=(FONT_ITEM[0], FONT_ITEM[1], "overstrike"))
+            self._maybe_scroll_to_next_page()
         else:
             lbl.configure(fg=FG, font=FONT_ITEM)
         self._update_progress()
+
+    def _maybe_scroll_to_next_page(self):
+        """If every checkable item currently visible in the run view has now
+        been checked, and there's more checklist below the fold, scroll down
+        so the next batch of items comes into view - like turning a page."""
+        canvas = self.items_canvas
+        canvas.update_idletasks()
+        view_top = canvas.canvasy(0)
+        view_bottom = canvas.canvasy(canvas.winfo_height())
+
+        visible = []
+        content_bottom = 0
+        for entry in self.item_rows:
+            row = entry["row"]
+            row_top = row.winfo_y()
+            row_bottom = row_top + row.winfo_height()
+            content_bottom = max(content_bottom, row_bottom)
+            if row_bottom > view_top and row_top < view_bottom:
+                visible.append(entry)
+
+        if not visible or not all(e["var"].get() for e in visible):
+            return
+        if content_bottom > view_bottom + 1:
+            canvas.yview_scroll(1, "pages")
 
     def _update_progress(self):
         total = len(self.item_rows)

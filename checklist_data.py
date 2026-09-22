@@ -163,6 +163,14 @@ class DataStore:
         cl["completed"] = completed
         self.save()
 
+    def reset_all_checklists(self, aircraft_name):
+        ac = self.get_aircraft(aircraft_name)
+        if not ac:
+            return
+        for cl in ac["checklists"]:
+            cl["completed"] = False
+        self.save()
+
     def move_checklist(self, aircraft_name, checklist_name, delta):
         ac = self.get_aircraft(aircraft_name)
         items = ac["checklists"]
