@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Electronic Checklist</title>
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="Aircraft electronic checklists, grouped by aircraft.">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="ECL">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div id="topbar">
+  <span class="topbar-label">AIRCRAFT</span>
+  <select id="aircraftSelect"></select>
+  <button id="btnAddAircraft" class="btn btn-icon" title="Add aircraft">+</button>
+  <button id="btnRenameAircraft" class="btn btn-icon" title="Rename aircraft">&#9998;</button>
+  <button id="btnDeleteAircraft" class="btn btn-icon" title="Delete aircraft">&#10005;</button>
+</div>
+<h1 id="header"></h1>
+<div id="main"></div>
+<div id="modalRoot"></div>
+
+<script src="./app.js"></script>
+</body>
+</html>
